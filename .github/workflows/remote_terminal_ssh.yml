@@ -1,17 +1,6 @@
 # https://github.com/rdp-studio/ssh2actions
 name: SSH Remote RDP
 run-name: SSH Remote RDP
-env:
-  # The name of the main module repository
-  main_project_module: workspace
-  task:
-  name: "Kali Linux SSH"
-  trigger_type: manual
-  timeout_in: 120m
-  container:
-      image: kalilinux/kali-rolling:latest
-      cpu: 8
-      memory: 32G
 on:
   workflow_dispatch:
 
@@ -22,6 +11,9 @@ jobs:
     steps:
     - name: Start SSH via tmate
       uses: rdp-studio/ssh2actions@main
+    
+      cpu: 8
+      memory: 32G
 #   Send connection info to Telegram (optional)
 #   You can find related documents here: https://core.telegram.org/bots
 #      env:
