@@ -1,15 +1,4 @@
-name: SSH Remote RDP
-run-name: SSH Remote RDP
 env:
-  # The name of the main module repository
-  main_project_module: workspace
-  
-on:
-  workflow_dispatch:
-
-jobs:
-  build:
-   env:
   TZ: Asia/Kolkata
   GIT_USERNAME: Sushrut1101
   GIT_EMAIL: guptasushrut@gmail.com
@@ -20,14 +9,25 @@ task:
   timeout_in: 120m
   container:
       image: kalilinux/kali-rolling:latest
-        
-    steps:
-    - name: Start SSH via tmate
-      uses: rdp-studio/ssh2actions@main
-    
+      cpu: 8
+      memory: 32G
 
-#   Send connection info to Telegram (optional)
-#   You can find related documents here: https://core.telegram.org/bots
-#      env:
-#       TELEGRAM_BOT_TOKEN: <your token>
-#       TELEGRAM_CHAT_ID: <your id>
+  Setup_script:
+      - apt update
+      - apt install sudo apt-utils -y
+      - DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+      - ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime
+      - apt-get install -y tzdata
+      - dpkg-reconfigure --frontend noninteractive tzdata
+      - sudo apt update -y && sudo apt install git aria2 curl wget tmate rsync zip unzip lzma cpio ccache neofetch openssh-server -y
+      - sudo apt install python2 -y
+      - sudo ln -sf /usr/bin/python2 /usr/bin/python
+      - git config --global user.name "$GIT_USERNAME"
+      - git config --global user.email "$GIT_EMAIL"
+      
+
+  Tmate_script:
+      - bash tmate.sh
+
+  Spam_script:
+      - bash spam.sh
