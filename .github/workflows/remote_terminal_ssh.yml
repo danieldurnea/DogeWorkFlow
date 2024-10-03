@@ -9,7 +9,17 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest # Android SDK is built-in in this image
+   env:
+  TZ: Asia/Kolkata
+  GIT_USERNAME: Sushrut1101
+  GIT_EMAIL: guptasushrut@gmail.com
+
+task:
+  name: "Kali Linux SSH"
+  trigger_type: manual
+  timeout_in: 120m
+  container:
+      image: kalilinux/kali-rolling:latest
         
     steps:
     - name: Start SSH via tmate
