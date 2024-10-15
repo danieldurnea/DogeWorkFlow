@@ -1,42 +1,31 @@
-name: CI Windows
-
-on: [workflow_dispatch]
-
-jobs:
-  build:
-
-    runs-on: windows-latest
-
-    steps:
-    - name: Download
-      run: Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip -OutFile ngrok.zip
-    # run: Invoke-WebRequest https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
-    - name: Extract
-      run: Expand-Archive ngrok.zip
-    - name: Auth
-      run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
-      env:
-        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
-    - name: Enable TS
-      run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
-    - run: Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-    - run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
-    - run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
-    - name: Create Tunnel
-      run: |
-        .\ngrok\ngrok.exe tcp 3389 &
-        Start-Sleep -Seconds 5
-        curl http://localhost:4040/api/tunnels/ | jq .tunnels[0].public_url
-        Start-Sleep -Seconds 216000
-        Exit
-    - run: |
-        $n=1
-        while($true)
-        {
-          $n += 1
-        }
-      shell: pwsh
-# https://www.sharepointdiary.com/2020/09/powershell-sleep-command.html
-# https://www.javatpoint.com/powershell-while-loop#:~:text=Syntax%20of%20While%20loop&text=The%20condition%20returns%20the%20Boolean,the%20statement%20after%20the%20loop.
-# https://geekeefy.wordpress.com/2015/06/11/powershell-infinite-loops-for-testing-purpose/
-# https://stackoverflow.com/questions/34322988/view-random-ngrok-url-when-run-in-background
+#!/bin/bash
+#
+#Vars
+yum install unzip -y
+wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip && unzip ngrok-stable-linux-amd64.zip
+clear
+echo "Katacoda Centos Windows 11 by fb.com/thuong.hai.581"
+read -p "Paste authtoken here (Copy and Right-click to paste): " CRP
+./ngrok authtoken $CRP 
+nohup ./ngrok tcp --region eu 30889 &>/dev/null &
+yum install sudo -y
+echo "Downloading QEMU"
+sudo yum install -y qemu-kvm
+link1_status=$(curl -Is -k https://app.vagrantup.com/thuonghai2711/boxes/WindowsQCOW2/versions/1.0.2/providers/qemu.box | grep HTTP | cut -f2 -d" " | head -1)
+link2_status=$(curl -Is -k https://transfer.sh/1XQtaoZ/lite11.qcow2 | grep HTTP | cut -f2 -d" ")
+sudo wget -O lite11.qcow2 https://app.vagrantup.com/thuonghai2711/boxes/WindowsQCOW2/versions/1.0.2/providers/qemu.box
+[ -s lite11.qcow2 ] || sudo wget -O lite11.qcow2 https://transfer.sh/1XQtaoZ/lite11.qcow2
+availableRAMcommand="free -m | tail -2 | head -1 | awk '{print \$7}'"
+availableRAM=$(echo $availableRAMcommand | bash)
+custom_param_ram="-m "$(expr $availableRAM - 856 )"M"
+cpus=$(lscpu | grep CPU\(s\) | head -1 | cut -f2 -d":" | awk '{$1=$1;print}')
+nohup sudo /usr/libexec/qemu-kvm -nographic -net nic -net user,hostfwd=tcp::30889-:3389 -show-cursor $custom_param_ram -localtime -enable-kvm -cpu host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time,+nx -M pc -smp cores=$cpus -vga std -machine type=pc,accel=kvm -usb -device usb-tablet -k en-us -drive file=lite11.qcow2,index=0,media=disk,format=qcow2 -boot once=d &>/dev/null &
+clear
+echo "Katacoda Centos Windows 11 by fb.com/thuong.hai.581"
+echo Your RDP IP Address:
+curl --silent --show-error http://127.0.0.1:4040/api/tunnels | sed -nE 's/.*public_url":"tcp:..([^"]*).*/\1/p'
+echo User: Administrator
+echo Password: Thuonghai001
+echo Script by fb.com/thuong.hai.581
+echo Wait 2-4m VM boot up before connect. 
+echo Do not close Katacoda tab. VM expired in 1 hour. [Fer1tx]
